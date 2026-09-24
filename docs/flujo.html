@@ -1,0 +1,335 @@
+<title>Resolución de identidades</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f2f4f6; --surface: #ffffff; --ink: #17212b; --muted: #5a6674; --line: #d5dbe1;
+  --rules: #1f6f8b; --rules-bg: #e3f0f5;
+  --laya: #a86300; --laya-bg: #fbefd9;
+  --match: #2e7d4f; --match-bg: #e2f2e8;
+  --non: #5f6b78; --non-bg: #eceff2;
+  --gold: #7d6310; --gold-bg: #f4eed8;
+  --err: #b3372f; --err-bg: #f8e3e1;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #10161d; --surface: #18212b; --ink: #e6ebf0; --muted: #9aa7b4; --line: #2c3844;
+    --rules: #6bb9d4; --rules-bg: #15303b; --laya: #f0a53a; --laya-bg: #3a2a10;
+    --match: #6cc48f; --match-bg: #15321f; --non: #9aa6b2; --non-bg: #222c37;
+    --gold: #dcbd5e; --gold-bg: #332910; --err: #ef7b72; --err-bg: #3d1b19;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #10161d; --surface: #18212b; --ink: #e6ebf0; --muted: #9aa7b4; --line: #2c3844;
+  --rules: #6bb9d4; --rules-bg: #15303b; --laya: #f0a53a; --laya-bg: #3a2a10;
+  --match: #6cc48f; --match-bg: #15321f; --non: #9aa6b2; --non-bg: #222c37;
+  --gold: #dcbd5e; --gold-bg: #332910; --err: #ef7b72; --err-bg: #3d1b19;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--body); padding-inline: 20px; padding-block: 40px 64px; }
+.wrap { max-width: 1000px; margin: 0 auto; display: grid; gap: 56px; }
+h1, h2 { font-family: var(--display); letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(30px, 5vw, 46px); font-weight: 800; line-height: 1.08; }
+h2 { font-size: 26px; font-weight: 800; }
+h3 { font-size: 16px; margin: 0; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 18px; }
+.lede { font-size: 18px; color: var(--muted); }
+.lede b { color: var(--ink); font-weight: 600; }
+section { display: grid; gap: 18px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; }
+.stat .n { font: 800 30px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.stat .l { font-size: 13px; color: var(--muted); }
+.stat.warn .n { color: var(--err); }
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 860px; width: 100%; height: auto; }
+svg text { font-family: var(--body); fill: var(--ink); }
+svg .t { font-size: 14px; font-weight: 600; }
+svg .s { font-size: 12px; fill: var(--muted); }
+svg .m { font-family: var(--mono); font-size: 11.5px; fill: var(--muted); }
+svg .num { font-family: var(--display); font-size: 22px; font-weight: 800; }
+svg .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; fill: var(--muted); }
+svg .edge { stroke: var(--muted); stroke-width: 1.5; fill: none; }
+svg .edge-laya { stroke: var(--laya); stroke-width: 1.5; fill: none; }
+svg .arrow { fill: var(--muted); }
+svg .arrow-laya { fill: var(--laya); }
+.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
+.box-src { fill: var(--non-bg); stroke: var(--line); }
+.box-rules { fill: var(--rules-bg); stroke: var(--rules); stroke-width: 1.4; }
+.box-laya { fill: var(--laya-bg); stroke: var(--laya); stroke-width: 1.4; }
+.box-match { fill: var(--match-bg); stroke: var(--match); stroke-width: 1.2; }
+.box-non { fill: var(--non-bg); stroke: var(--non); stroke-width: 1.2; }
+.box-gold { fill: var(--gold-bg); stroke: var(--gold); stroke-width: 1.4; }
+.box-err { fill: var(--err-bg); stroke: var(--err); stroke-width: 1.2; }
+.zone { fill: none; stroke: var(--line); stroke-width: 1.4; stroke-dasharray: 5 5; }
+.zone-solid { fill: var(--bg); stroke: var(--line); stroke-width: 1.2; }
+svg .c-rules { fill: var(--rules); } svg .c-laya { fill: var(--laya); } svg .c-match { fill: var(--match); }
+svg .c-gold { fill: var(--gold); } svg .c-err { fill: var(--err); } svg .c-non { fill: var(--non); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid; display: inline-block; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 4px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.steps li::before { content: counter(s); grid-row: span 2; font: 800 20px/1.2 var(--display); color: var(--muted); }
+.steps li p { color: var(--muted); font-size: 15px; }
+code, .code { font-family: var(--mono); font-size: 0.88em; }
+.steps code { color: var(--ink); background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+.tag { font: 500 11px/1 var(--mono); padding: 3px 6px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; }
+.tag-rules { background: var(--rules-bg); color: var(--rules); }
+.tag-laya { background: var(--laya-bg); color: var(--laya); }
+.tag-gold { background: var(--gold-bg); color: var(--gold); }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 12px/1.3 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+td.num { text-align: right; white-space: nowrap; }
+.note { font-size: 14px; color: var(--muted); }
+.callout { border-left: 3px solid var(--laya); background: var(--surface); padding: 14px 18px; border-radius: 0 8px 8px 0; display: grid; gap: 8px; }
+.cmds { display: grid; gap: 8px; }
+.cmd { display: flex; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; flex-wrap: wrap; }
+.cmd code { font-size: 14px; color: var(--ink); min-width: 150px; }
+.cmd span { color: var(--muted); font-size: 14px; flex: 1; min-width: 180px; }
+.cmd button { font: 500 12px var(--mono); background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.cmd button:focus-visible { outline: 2px solid var(--rules); outline-offset: 2px; }
+footer { font-size: 13px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Entity Resolution · laboratorio · Airflow 3.3 + Laya</div>
+    <h1>Resolución de identidades: de dos fuentes a un cliente único</h1>
+    <p class="lede">Unimos clientes de <b>CRM</b> y <b>Billing</b> en una tabla <b>Gold</b> con un <code>master_id</code> por persona real. Primero deciden las <b>reglas</b>; <b>Laya</b> solo mira los pares que las reglas no pudieron decidir. Todo se mide contra datos sintéticos cuya respuesta correcta conocemos.</p>
+    <div class="stats">
+      <div class="stat"><div class="n">2.109</div><div class="l">registros de entrada (1.060 personas reales)</div></div>
+      <div class="stat"><div class="n">1.896</div><div class="l">pares candidatos después del blocking</div></div>
+      <div class="stat"><div class="n">91 %</div><div class="l">de los pares los resuelven las reglas (test)</div></div>
+      <div class="stat warn"><div class="n">5 / 20</div><div class="l">errores de Laya en lo que resolvió de la cola (test)</div></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="eyebrow">01 · Flujo de datos</div>
+    <h2>Cómo viaja un registro</h2>
+    <p>Números del run <code>cascade1</code> (24/09/2026), todos los splits. Cada caja es una etapa; las flechas llevan los pares de una decisión a la siguiente.</p>
+    <div class="diagram" role="img" aria-label="Flujo: CRM y Billing se normalizan en Silver, el blocking genera 1.896 pares, las reglas deciden MATCH 1.063, NON_MATCH 659 y REVIEW 174; Laya juzga los 174 en REVIEW, pasa 78 a NON_MATCH y deja 96 para revisión humana; los MATCH forman 1.148 masters en Gold.">
+      <svg viewBox="0 0 1000 380">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrow"/></marker>
+          <marker id="arl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrow-laya"/></marker>
+        </defs>
+        <text x="10" y="22" class="lbl">BRONZE</text>
+        <text x="175" y="22" class="lbl">SILVER</text>
+        <text x="340" y="22" class="lbl">CANDIDATOS</text>
+        <text x="505" y="22" class="lbl">ETAPA 1 · REGLAS</text>
+        <text x="690" y="22" class="lbl">DECISIÓN</text>
+        <text x="855" y="22" class="lbl">GOLD</text>
+
+        <rect x="10" y="110" width="130" height="62" rx="7" class="box-src"/>
+        <text x="22" y="134" class="t">CRM</text><text x="22" y="158" class="num">1.134</text>
+        <rect x="10" y="198" width="130" height="62" rx="7" class="box-src"/>
+        <text x="22" y="222" class="t">Billing</text><text x="22" y="246" class="num">975</text>
+
+        <rect x="175" y="148" width="130" height="76" rx="7" class="box"/>
+        <text x="187" y="170" class="t">Entidades</text><text x="187" y="196" class="num">2.109</text>
+        <text x="187" y="214" class="s">normalizadas</text>
+
+        <rect x="340" y="148" width="130" height="76" rx="7" class="box"/>
+        <text x="352" y="170" class="t">Pares</text><text x="352" y="196" class="num">1.896</text>
+        <text x="352" y="214" class="s">email · tel · nombre</text>
+
+        <rect x="505" y="148" width="150" height="76" rx="7" class="box-rules"/>
+        <text x="517" y="170" class="t">Reglas</text>
+        <text x="517" y="190" class="s">regresión sobre</text>
+        <text x="517" y="206" class="s">email, tel, nombre,</text>
+        <text x="517" y="218" class="s">fecha, dirección</text>
+
+        <rect x="690" y="40" width="135" height="58" rx="7" class="box-match"/>
+        <text x="702" y="62" class="t">MATCH</text><text x="702" y="88" class="num c-match">1.063</text>
+        <rect x="690" y="158" width="135" height="58" rx="7" class="box-non"/>
+        <text x="702" y="180" class="t">NON_MATCH</text><text x="702" y="206" class="num c-non">659</text>
+        <rect x="690" y="276" width="135" height="76" rx="7" class="box-laya"/>
+        <text x="702" y="296" class="t">REVIEW → Laya</text><text x="702" y="322" class="num c-laya">174</text>
+        <text x="702" y="341" class="s">71 s en CPU</text>
+
+        <rect x="855" y="40" width="135" height="104" rx="7" class="box-gold"/>
+        <text x="867" y="62" class="t">Gold</text><text x="867" y="88" class="num c-gold">1.148</text>
+        <text x="867" y="106" class="s">masters</text>
+        <text x="867" y="124" class="s">tras quality gate</text>
+        <rect x="855" y="250" width="135" height="50" rx="7" class="box-non"/>
+        <text x="867" y="270" class="t">+78 NON_MATCH</text><text x="867" y="289" class="s">los decidió Laya</text>
+        <rect x="855" y="312" width="135" height="56" rx="7" class="box-err"/>
+        <text x="867" y="333" class="t">96 siguen</text><text x="867" y="352" class="s">revisión humana</text>
+
+        <path d="M140,141 C158,141 158,176 173,176" class="edge" marker-end="url(#ar)"/>
+        <path d="M140,229 C158,229 158,196 173,196" class="edge" marker-end="url(#ar)"/>
+        <path d="M305,186 L338,186" class="edge" marker-end="url(#ar)"/>
+        <path d="M470,186 L503,186" class="edge" marker-end="url(#ar)"/>
+        <path d="M655,176 C672,176 668,69 688,69" class="edge" marker-end="url(#ar)"/>
+        <path d="M655,187 L688,187" class="edge" marker-end="url(#ar)"/>
+        <path d="M655,198 C672,198 668,314 688,314" class="edge" marker-end="url(#ar)"/>
+        <path d="M825,69 L853,69" class="edge" marker-end="url(#ar)"/>
+        <path d="M825,305 C840,305 838,275 853,275" class="edge-laya" marker-end="url(#arl)"/>
+        <path d="M825,325 C840,325 838,340 853,340" class="edge-laya" marker-end="url(#arl)"/>
+        <text x="690" y="238" class="m">no se unen</text>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--rules-bg);border-color:var(--rules)"></i>Reglas</span>
+      <span><i style="background:var(--laya-bg);border-color:var(--laya)"></i>Laya</span>
+      <span><i style="background:var(--match-bg);border-color:var(--match)"></i>Se unen</span>
+      <span><i style="background:var(--non-bg);border-color:var(--non)"></i>Quedan separados</span>
+      <span><i style="background:var(--err-bg);border-color:var(--err)"></i>Van a un humano</span>
+      <span><i style="background:var(--gold-bg);border-color:var(--gold)"></i>Publicado</span>
+    </div>
+
+    <ol class="steps">
+      <li><h3>Ingesta <span class="tag tag-rules">ingest_bronze</span></h3><p>Los CSV de CRM y Billing se copian tal cual a <code>raw.*</code>. Nada se transforma todavía.</p></li>
+      <li><h3>Normalización <span class="tag tag-rules">normalize_silver</span></h3><p>Un esquema común: nombres sin acentos, email sin <code>+tag</code> ni puntos de Gmail, teléfono en E.164 y fechas ISO. Resultado: <code>silver.entities</code>.</p></li>
+      <li><h3>Blocking <span class="tag tag-rules">build_pairs</span></h3><p>No comparamos todos contra todos. Un par es candidato si comparte email, teléfono o apellido parecido en la misma ciudad (con nombre similar). Para cada par se calculan features: ¿mismo email?, ¿mismo teléfono?, similitud de nombre y dirección.</p></li>
+      <li><h3>Etapa 1: reglas <span class="tag tag-rules">decide_rules</span></h3><p>Una regresión logística sobre las features da <code>p_match</code>. Por encima del umbral alto: MATCH. Por debajo del bajo: NON_MATCH. En el medio: REVIEW. Los umbrales se ajustan con la parte <em>dev</em> de los datos.</p></li>
+      <li><h3>Etapa 2: Laya <span class="tag tag-laya">judge_batch · decide_laya</span></h3><p>Solo los pares en REVIEW. Laya responde <em>"¿es la misma persona?"</em> con una probabilidad. Una segunda regresión decide si el par sale de la cola o queda para un humano. Un error de Laya nunca produce un match.</p></li>
+      <li><h3>Gold <span class="tag tag-gold">build_gold_staging</span></h3><p>Los MATCH se agrupan en personas (si A=B y B=C, es una sola). Cada grupo recibe un <code>master_id</code> y, por campo, gana el valor no nulo más reciente.</p></li>
+      <li><h3>Quality gate y publicación <span class="tag tag-gold">checks · publish_gold</span></h3><p>Se valida staging: IDs únicos, sin nulos, sin emails duplicados y toda entidad mapeada. Si algo falla, el DAG falla y Gold no cambia. Si pasa, Gold se reemplaza en una sola transacción.</p></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="eyebrow">02 · Arquitectura técnica</div>
+    <h2>Qué corre dónde</h2>
+    <p>Todo local en Docker Compose: un contenedor de Airflow y uno de Postgres. Laya corre dentro de las tareas de Airflow, en CPU, y lee sus pesos de un volumen.</p>
+    <div class="diagram" role="img" aria-label="Arquitectura: en la Mac, Docker Compose corre un contenedor de Airflow 3.3.2 con api-server, scheduler con LocalExecutor y dag-processor; las tareas del DAG corren como procesos y judge_batch carga Laya en CPU con el pool laya_pool de un slot. Un contenedor de Postgres 16 tiene la base airflow de metadatos y la base warehouse con los esquemas raw, silver, gold_staging, gold y ops. Carpetas del repo y el volumen er_hf_cache con los pesos de Laya se montan en el contenedor de Airflow.">
+      <svg viewBox="0 0 1000 470">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrow"/></marker>
+          <marker id="ar2l" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrow-laya"/></marker>
+        </defs>
+        <rect x="6" y="6" width="988" height="458" rx="12" class="zone"/>
+        <text x="22" y="30" class="lbl">MAC · DOCKER DESKTOP · 10 vCPU · 12,5 GB · SOLO CPU</text>
+
+        <rect x="22" y="70" width="170" height="64" rx="7" class="box"/>
+        <text x="34" y="94" class="t">Navegador</text>
+        <text x="34" y="114" class="m">localhost:8080</text>
+
+        <rect x="222" y="46" width="456" height="290" rx="10" class="zone-solid"/>
+        <text x="236" y="68" class="lbl">CONTENEDOR AIRFLOW</text>
+        <text x="236" y="86" class="m">apache/airflow:3.3.2 + torch CPU + laya 0.3.20</text>
+
+        <rect x="236" y="100" width="130" height="50" rx="6" class="box"/>
+        <text x="248" y="121" class="t">api-server</text><text x="248" y="139" class="m">UI + REST :8080</text>
+        <rect x="378" y="100" width="150" height="50" rx="6" class="box"/>
+        <text x="390" y="121" class="t">scheduler</text><text x="390" y="139" class="m">LocalExecutor</text>
+        <rect x="540" y="100" width="124" height="50" rx="6" class="box"/>
+        <text x="552" y="121" class="t">dag-processor</text><text x="552" y="139" class="m">parsea dags/</text>
+
+        <rect x="236" y="166" width="428" height="70" rx="6" class="box-rules"/>
+        <text x="248" y="188" class="t">Tareas del DAG (un proceso cada una)</text>
+        <text x="248" y="208" class="m">ingest · normalize · build_pairs · decide_rules · decide_laya</text>
+        <text x="248" y="224" class="m">build_gold_staging · 3 SQL checks · publish_gold · build_report</text>
+
+        <rect x="236" y="252" width="200" height="70" rx="6" class="box-laya"/>
+        <text x="248" y="274" class="t">judge_batch.expand</text>
+        <text x="248" y="292" class="m">lotes de 250 pares</text>
+        <text x="248" y="308" class="m">pool laya_pool = 1 slot</text>
+        <rect x="450" y="252" width="214" height="70" rx="6" class="box-laya"/>
+        <text x="462" y="274" class="t">Laya en proceso</text>
+        <text x="462" y="292" class="m">torch CPU · 10 threads</text>
+        <text x="462" y="308" class="m">~0,4 s por par</text>
+        <path d="M436,287 L448,287" class="edge-laya" marker-end="url(#ar2l)"/>
+
+        <rect x="708" y="46" width="270" height="290" rx="10" class="zone-solid"/>
+        <text x="722" y="68" class="lbl">CONTENEDOR POSTGRES 16</text>
+        <rect x="722" y="84" width="242" height="56" rx="6" class="box"/>
+        <text x="734" y="106" class="t">db airflow</text><text x="734" y="126" class="m">metadatos, XCom, pools</text>
+        <rect x="722" y="154" width="242" height="168" rx="6" class="box-gold"/>
+        <text x="734" y="176" class="t">db warehouse</text>
+        <text x="734" y="200" class="m">raw           CSV tal cual</text>
+        <text x="734" y="220" class="m">silver        entidades, pares,</text>
+        <text x="734" y="236" class="m">              laya_scores, decisiones</text>
+        <text x="734" y="256" class="m">gold_staging  antes del gate</text>
+        <text x="734" y="276" class="m">gold          master + xref</text>
+        <text x="734" y="296" class="m">ops           ground truth, métricas</text>
+
+        <text x="236" y="376" class="lbl">MONTADOS EN EL CONTENEDOR AIRFLOW</text>
+        <rect x="236" y="388" width="96" height="56" rx="6" class="box"/>
+        <text x="246" y="410" class="t">dags/</text><text x="246" y="428" class="m">el DAG</text>
+        <rect x="342" y="388" width="96" height="56" rx="6" class="box"/>
+        <text x="352" y="410" class="t">src/er/</text><text x="352" y="428" class="m">lógica</text>
+        <rect x="448" y="388" width="96" height="56" rx="6" class="box"/>
+        <text x="458" y="410" class="t">data/</text><text x="458" y="428" class="m">CSV sintéticos</text>
+        <rect x="554" y="388" width="124" height="56" rx="6" class="box"/>
+        <text x="564" y="410" class="t">reports/</text><text x="564" y="428" class="m">benchmark.md</text>
+        <rect x="708" y="388" width="270" height="56" rx="6" class="box-laya"/>
+        <text x="720" y="410" class="t">volumen er_hf_cache</text>
+        <text x="720" y="428" class="m">pesos de Laya (~1,7 GB, Hugging Face)</text>
+
+        <path d="M192,114 L234,122" class="edge" marker-end="url(#ar2)"/>
+        <path d="M528,125 C620,125 640,112 720,112" class="edge" marker-end="url(#ar2)"/>
+        <path d="M664,200 C690,200 690,230 720,230" class="edge" marker-end="url(#ar2)"/>
+        <text x="668" y="190" class="m">SQL</text>
+        <path d="M842,388 C842,360 560,360 560,324" class="edge-laya" marker-end="url(#ar2l)"/>
+        <path d="M456,388 L456,340" class="edge" marker-end="url(#ar2)"/>
+      </svg>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">03 · Qué medimos</div>
+    <h2>Resultado del laboratorio</h2>
+    <p>Split <em>test</em> (40 % de las personas, nunca vistas al entrenar). Una sola semilla, datos sintéticos.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Etapa</th><th>Qué pasó</th><th class="num">Tiempo</th></tr></thead>
+        <tbody>
+          <tr><td><b>Reglas</b></td><td>Resolvieron el 91,3 % de los pares con precisión de MATCH 0.995. Dejaron 65 pares en REVIEW; 30 eran la misma persona.</td><td class="num">segundos</td></tr>
+          <tr><td><b>Laya sobre la cola</b></td><td>Resolvió 20 de 65, todos como NON_MATCH, con 5 errores: 5 personas reales quedaron separadas (precisión 0.75). AUC de su probabilidad dentro de la cola: 0.49.</td><td class="num">71 s · 174 pares</td></tr>
+          <tr><td><b>Laya sobre todo</b> (run previo)</td><td>AUC 0.92 sobre todos los pares, +1,1 pp de automatización. Ese AUC viene de los pares fáciles, que las reglas ya resuelven.</td><td class="num">~14 min</td></tr>
+          <tr><td><b>Quality gate</b></td><td>Con un duplicado inyectado en staging, el DAG falla y Gold no cambia.</td><td class="num">—</td></tr>
+          <tr><td><b>Idempotencia</b></td><td>Dos runs seguidos con la misma semilla producen el mismo hash de Gold.</td><td class="num">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <h3>Lectura</h3>
+      <p>Con estos datos y sin fine-tuning, Laya no le saca trabajo al revisor humano: en los casos que las reglas no pueden decidir, su probabilidad no separa mejor que el azar. La cascada permitió verlo en 1,6 minutos por run.</p>
+      <p class="note">Siguientes experimentos: más semillas, un dataset con menos email y teléfono compartidos, fine-tuning de Laya sobre la cola, y una muestra real anonimizada.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">04 · Correrlo</div>
+    <h2>Comandos</h2>
+    <div class="cmds">
+      <div class="cmd"><code>make up</code><span>Levanta Postgres y Airflow en localhost:8080</span><button type="button" data-copy="make up">Copiar</button></div>
+      <div class="cmd"><code>make run</code><span>Cascada completa, reglas y Laya (~2 min)</span><button type="button" data-copy="make run">Copiar</button></div>
+      <div class="cmd"><code>make run-rules</code><span>Solo reglas, sin Laya (~1 min)</span><button type="button" data-copy="make run-rules">Copiar</button></div>
+      <div class="cmd"><code>make gate-test</code><span>Inyecta un duplicado: el DAG debe fallar y Gold no cambiar</span><button type="button" data-copy="make gate-test">Copiar</button></div>
+      <div class="cmd"><code>make test</code><span>Tests unitarios</span><button type="button" data-copy="make test">Copiar</button></div>
+    </div>
+  </section>
+
+  <footer>Repo <code>entity-resolution-poc</code> · run <code>cascade1</code>, 24/09/2026.</footer>
+</div>
+
+<script>
+document.querySelectorAll("[data-copy]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var text = btn.getAttribute("data-copy");
+    var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { selectCode(btn); });
+    } else { selectCode(btn); }
+  });
+});
+function selectCode(btn) {
+  var code = btn.parentNode.querySelector("code");
+  var r = document.createRange(); r.selectNodeContents(code);
+  var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+</script>

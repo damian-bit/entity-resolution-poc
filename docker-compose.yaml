@@ -1,0 +1,56 @@
+x-airflow-env: &airflow-env
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__CORE__PARALLELISM: "8"
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+  AIRFLOW_CONN_ER_WAREHOUSE: postgresql://airflow:airflow@postgres:5432/warehouse
+  ER_WAREHOUSE_URL: postgresql://airflow:airflow@postgres:5432/warehouse
+  ER_DATA_DIR: /opt/airflow/data
+  ER_REPORTS_DIR: /opt/airflow/reports
+  PYTHONPATH: /opt/airflow/src
+  HF_HOME: /home/airflow/.cache/huggingface
+  HF_HUB_OFFLINE: ${HF_HUB_OFFLINE:-0}
+  TOKENIZERS_PARALLELISM: "false"
+  ER_TORCH_THREADS: "10"
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql/00_create_warehouse.sql:/docker-entrypoint-initdb.d/00_create_warehouse.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 10
+
+  airflow:
+    build: .
+    image: er-airflow:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: *airflow-env
+    command: >
+      bash -c "airflow db migrate &&
+               airflow pools set laya_pool 1 'Laya: un modelo a la vez, todos los cores' &&
+               airflow standalone"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+      - ./sql:/opt/airflow/sql
+      - ./data:/opt/airflow/data
+      - ./reports:/opt/airflow/reports
+      - ./tests:/opt/airflow/tests
+      - er_hf_cache:/home/airflow/.cache
+
+volumes:
+  pg_data:
+  er_hf_cache:
+    external: true

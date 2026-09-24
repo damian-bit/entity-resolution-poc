@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.env
+data/
+reports/
+logs/
+.pytest_cache/
+docs/rfc/
