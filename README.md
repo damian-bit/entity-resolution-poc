@@ -25,6 +25,21 @@ Así el costo de inferencia queda acotado al subconjunto donde el modelo puede a
 
 ```mermaid
 flowchart LR
+    A["load_to_warehouse<br/>(ingesta · normalización · blocking · reglas)<br/>1.896 pares → 1.722 resueltos"] -->|174 en REVIEW| B["ask_llm<br/>(Laya, solo la porción incierta)<br/>78 resueltos"]
+    B -->|96| C["human_review_queue<br/>(silver.review_queue)"]
+
+    classDef rules fill:#e3f0f5,stroke:#1f6f8b,color:#17212b
+    classDef laya fill:#fbefd9,stroke:#a86300,color:#17212b
+    classDef human fill:#f8e3e1,stroke:#b3372f,color:#17212b
+    class A rules
+    class B laya
+    class C human
+```
+
+Detalle por etapa:
+
+```mermaid
+flowchart LR
     CRM["CRM<br/>1.134"] --> S["Silver<br/>2.109 entidades"]
     BIL["Billing<br/>975"] --> S
     S -->|blocking| P["1.896 pares"]
